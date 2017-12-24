@@ -69,12 +69,12 @@ module.exports = function (app,con1) {
         var name = req.body.var_name;
         var status = req.body.var_status;
         var province = req.body.var_province;
-        console.log(name);
+        console.log(name , status , province);
             var sql = "SELECT * FROM `order`INNER JOIN user ON order.user_id = user.user_id WHERE user.user_username='"+name+"' ORDER BY `order`.`order_id` DESC";
         if(status!='vip'){
             if(name=='admin'){
                 sql = "SELECT * FROM `order`INNER JOIN user ON order.user_id = user.user_id ORDER BY `order`.`order_id` DESC";
-            }else{
+            }else if(status=='dealer'){
                 sql = "SELECT * FROM `order`INNER JOIN user ON order.user_id = user.user_id WHERE user.user_province='"+province+"' ORDER BY `order`.`order_id` DESC";   
             }
         }else{
