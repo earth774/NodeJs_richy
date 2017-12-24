@@ -1,0 +1,24 @@
+{
+  "name": "test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "dependencies": {
+    "body-parser": "^1.17.2",
+    "cors": "^2.8.3",
+    "ejs": "^2.5.7",
+    "express": "^4.15.4",
+    "expressjs": "^1.0.1",
+    "fs": "0.0.1-security",
+    "jsonwebtoken": "^8.0.0",
+    "mysql": "^2.14.1",
+    "node-datetime": "^2.0.0",
+    "oembed-auto": "^0.0.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}

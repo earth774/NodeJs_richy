@@ -1,0 +1,407 @@
+var express = require('express');
+var JWT = require('jsonwebtoken');
+var fs = require('fs');
+var dateTime = require('node-datetime');
+var md5 = require('md5');
+module.exports = function (app,con1) {
+
+    
+    // ################################################
+    // ##                                            ##
+    // ##            Update number order             ##
+    // ##                                            ##
+    // ################################################
+
+    app.get('/province',function(req,res){
+        var sql="SELECT * FROM `province` ORDER BY `province`.`PROVINCE_NAME` ASC";
+        con1.query(sql,function(err,rows){
+            if (err) throw err;
+            res.json(rows);
+        });
+    })
+    app.get('/amphur/:name',function(req,res){
+        var sql="SELECT * FROM `province` where PROVINCE_NAME ='"+req.params.name+"'";
+        con1.query(sql,function(err,rows){
+            if (err) throw err;
+            console.log(rows[0].PROVINCE_ID);
+            var sql1="SELECT amphur.AMPHUR_ID,province.PROVINCE_ID,amphur.AMPHUR_NAME FROM `province` INNER JOIN amphur on province.PROVINCE_ID = amphur.PROVINCE_ID WHERE amphur.PROVINCE_ID="+rows[0].PROVINCE_ID;
+            con1.query(sql1,function(err,rows1){
+                if (err) throw err;
+                res.json(rows1);
+            });
+        });
+    })
+
+    app.get('/num_user',function(req,res){
+        var sql="SELECT COUNT(user_id) as num_user FROM `user`";
+        con1.query(sql,function(err,rows){
+            if (err) throw err;
+            res.json(rows);
+        });
+    })
+
+    app.get('/update/:status/:name',function(req,res){
+        var sql = "SELECT * FROM `user` WHERE `user_name` LIKE '%"+req.params.name+"%' &&`user_status`='"+req.params.status+"'";       
+        let user1=[];
+        con1.query(sql,function (err,rows) {
+            if(err) throw err;
+            for (let i in rows) {
+                let user = {         
+                  'name' : rows[i].user_name +" / "+ rows[i].user_username
+                };
+                user1.push(user);
+            }
+            res.json(user1);
+        });
+    });
+    app.get('/update',function(req,res){
+        var sql = "SELECT * FROM `user`";       
+        let user1=[];
+        con1.query(sql,function (err,rows) {
+            if(err) throw err;
+            for (let i in rows) {
+            let user = {         
+                          'name' : rows[i].user_name +" / "+ rows[i].user_username
+                        };
+                user1.push(user);
+            }
+            res.json(user1);
+        });
+    });
+    app.post('/token',function (req,res) {
+        
+        var sql = "SELECT * FROM `user` WHERE user_username=? && user_password=?";
+        
+        var user = req.body.var_user;
+        var pass = req.body.var_pass;
+
+        console.log(user, md5(pass));
+        con1.query(sql,[user,md5(pass)],function (err,rows) {
+            if (err) throw err; 
+            if(rows!="") {
+                let user = {
+                          'id':rows[0].user_id,
+                          'image':rows[0].user_image,         
+                          'username' : rows[0].user_username,
+                          'head': rows[0].user_head,
+                          'name':rows[0].user_name,
+                          'tel':rows[0].user_tel,
+                          'facebook':rows[0].user_facebook,
+                          'email':rows[0].user_email,
+                          'status':rows[0].user_status,
+                          'province':rows[0].user_province,
+                          'results':'success_update'
+                        };
+                let token = JWT.sign(user, 'mysecretKey', {
+                      expiresIn: '5s'
+                    });
+                    var decoded = JWT.decode(token, {complete: true});
+                    console.log(token);
+                    console.log(decoded); 
+                res.json({'token':token} );
+            }else{
+                console.log(rows);
+                res.json({'token':""} );
+            }
+        });
+        // res.send(rand.generate(64));
+    });
+    app.post('/profind',function (req,res) {
+        
+        var sql = "UPDATE `user` SET `user_image`=?,`user_name`=?,`user_tel`=?,`user_facebook`=?,`user_email`=?,`user_lat`=?,`user_lng`=?,`user_address`=?,`user_province`=?,`user_amphur`=? WHERE `user_username`=?";
+        
+        var user = req.body.var_user;
+        var name = req.body.var_name;
+        var tel = req.body.var_tel;
+        var facebook = req.body.var_facebook;
+        var email = req.body.var_email;
+        var image = req.body.image;
+        var lat = req.body.lat;
+        var lng = req.body.lng;
+        var line_image = req.body.line_image;
+        var address = req.body.address;
+        var province = req.body.province;
+        var amphur = req.body.amphur;
+        console.log(address,province,amphur);
+        if(image!=undefined){
+            
+        console.log(image.substring(7,21));
+        console.log(req.get('host'));
+        if(image.substring(7,21)==req.get('host')){
+            con1.query(sql,[image,name,tel,facebook,email,lat,lng,address,province,amphur,user],function (err,rows) {
+                if (err) throw err; 
+                res.json({'results':'success_update','message':'แก่ไขข้อมูลเรียบร้อย'});
+                    
+            });
+        }else{
+                var dt = dateTime.create();
+                var formatted = dt.format('YmdHMS');
+
+                // console.log(name + tel + facebook + email,image);
+                var data = image.replace(/^data:image\/\w+;base64,/, '');
+                var url = req.protocol + '://' + req.get('host') +  '/picture/user/';
+                console.log(line_image.substring(21));
+                fs.unlink("."+line_image.substring(21), (err) => {  // delete file picture for file node js eiei
+                    if (err) throw err;
+                    console.log('successfully deleted local image'); 
+                    fs.writeFile('picture/user/'+formatted+'.jpg', data, {encoding: 'base64'}, function(err){
+                        if (err) throw err;
+                        con1.query(sql,[url+formatted+'.jpg',name,tel,facebook,email,lat,lng,address,province,amphur,user],function (err,rows) {
+                            if (err) throw err; 
+                            res.json({'results':'success_update','message':'แก่ไขข้อมูลเรียบร้อย','image':url+formatted+'.jpg'});   
+                        });
+                    });
+                });
+            }
+        }else{
+            if(image==undefined){
+                con1.query(sql,['',name,tel,facebook,email,lat,lng,address,province,amphur,'admin'],function (err,rows) {
+                if (err) throw err; 
+                res.json({'results':'success_update','message':'แก่ไขข้อมูลเรียบร้อย'});
+                    
+            });
+        }    
+        
+        }
+    });
+     app.post('/update_profind',function (req,res) {
+        
+        var sql = 'UPDATE `user` SET `user_image`=?,\
+            `user_password`=?,\
+             `user_status`=?,\
+              `user_head`=?,\
+               `user_name`=?,\
+                `user_tel`=?,\
+                 `user_facebook`=?,\
+                  `user_email`=?,\
+                  `user_address`=?,\
+                  `user_province`=?,\
+                  `user_amphur`=?,\
+                   `user_lat`=? ,\
+                    `user_lng`=?\
+                     WHERE `user_username`= ?';
+        
+        var user = req.body.var_user;
+        var name = req.body.var_name;
+        var tel = req.body.var_tel;
+        var facebook = req.body.var_facebook;
+        var email = req.body.var_email;
+        var image = req.body.var_image;
+        var lat = req.body.lat;
+        var lng = req.body.lng;
+        var line_image = req.body.line_image;
+        var password = req.body.var_password;
+        var select = req.body.var_select;
+        var head = req.body.var_head;
+        var address = req.body.address;
+        var province = req.body.province;
+        var amphur = req.body.amphur;
+        console.log(amphur);
+        if(image!=undefined){
+            
+        console.log(image.substring(7,21));
+        console.log(req.get('host'));
+        if(image.substring(7,21)==req.get('host')){
+
+            con1.query(sql,[image,password,select,head,name,tel,facebook,email,address,province,amphur,lat,lng,user],function (err,rows) {
+                if (err) throw err; 
+                res.json({'results':'success_update','message':'แก่ไขข้อมูลเรียบร้อย'});
+                    
+            });
+        }else{
+                var dt = dateTime.create();
+                var formatted = dt.format('YmdHMS');
+
+                // console.log(name + tel + facebook + email,image);
+                var data = image.replace(/^data:image\/\w+;base64,/, '');
+                var url = req.protocol + '://' + req.get('host') +  '/picture/user/';
+                console.log(line_image.substring(21));
+                fs.unlink("."+line_image.substring(21), (err) => {  // delete file picture for file node js eiei
+                    if (err) throw err;
+                    console.log('successfully deleted local image'); 
+                    fs.writeFile('picture/user/'+formatted+'.jpg', data, {encoding: 'base64'}, function(err){
+                        
+                        con1.query(sql,[url+formatted+'.jpg',password,select,head,name,tel,facebook,email,address,province,amphur,lat,lng,user],function (err,rows) {
+                            if (err) throw err; 
+                            res.json({'results':'success_update','message':'แก่ไขข้อมูลเรียบร้อย','image':url+formatted+'.jpg'});
+                                
+                        });
+                    });
+                });
+            }
+        }else{
+            if(image==undefined){
+                con1.query(sql,['',password,select,head,name,tel,facebook,email,address,province,amphur,lat,lng,user],function (err,rows) {
+                    if (err) throw err; 
+                    res.json({'results':'success_update','message':'แก่ไขข้อมูลเรียบร้อย'});
+                    
+                });
+            }    
+        
+        }
+    });
+
+// app.post('/select_status',function (req,res) {
+//         var select_status = req.body.select_status;
+//         console.log(select_status);
+//         let status;
+//         if(select_status=='gold'){
+//             status="`user_status`='vip'";
+//         }else if(select_status=='vip'){
+//             status="`user_status`='dealer'";
+//         }else if(select_status=='dealer'){
+//             status="`user_status`='admin'";
+//         }else if(select_status=='admin'){
+//             status="`user_status`='admin'";
+//         }else{
+//                status=1;
+//         }
+//         var sql = "SELECT * FROM `user` WHERE "+status;
+        
+//         let user1 = [];
+//         con1.query(sql,function (err,rows) {
+//             if (err) throw err; 
+//             for (let i in rows) {
+//             let user = {         
+//                           'username' : rows[i].user_name,
+//                           'status':status
+//                         };
+//                 user1.push(user);
+//             }
+//             console.log(user1);
+//             res.json(user1);
+                
+//         });
+//     });
+
+    app.post('/show_profind',function (req,res) {
+        var user = req.body.var_user;
+        var sql = "SELECT * FROM `user` WHERE `user_username`='"+user+"'";
+
+        console.log(user);
+        con1.query(sql,function (err,rows) {
+            if (err) throw err; 
+            let user = {         
+                          'image':rows[0].user_image,
+                          'user':rows[0].user_username,
+                          'name':rows[0].user_name,
+                          'tel':rows[0].user_tel,
+                          'facebook':rows[0].user_facebook,
+                          'email':rows[0].user_email,
+                          'address':rows[0].user_address,
+                          'province':rows[0].user_province,
+                          'amphur':rows[0].user_amphur,
+                          'user_lat':rows[0].user_lat,
+                          'user_lng':rows[0].user_lng
+                        };
+            console.log([user]);
+            res.json([user]);
+                
+        });
+    });
+
+    app.post('/add_member',function (req,res) {
+        var user = req.body.var_username;
+        var password = req.body.var_password;
+        var select = req.body.var_select;
+        var head = req.body.var_head;
+        var name = req.body.var_name;
+        var tel = req.body.var_tel;
+        var facebook = req.body.var_facebook;
+        var email = req.body.var_email;
+        var image = req.body.image;
+        var lat = req.body.lat;
+        var lng = req.body.lng;
+        var address = req.body.address;
+        var province = req.body.province;
+        var amphur = req.body.amphur;
+        console.log(amphur);
+        var sql = "INSERT INTO `user`(`user_image`, `user_username`, `user_password`, `user_status`, `user_head`, `user_name`, `user_tel`, `user_facebook`, `user_email`, `user_address`, `user_province`,`user_amphur`,`user_lat`,`user_lng`) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+
+        console.log(sql);
+        console.log(user);
+            var dt = dateTime.create();
+            var formatted = dt.format('YmdHMS');
+
+            // console.log(name + tel + facebook + email,image);
+            var data = image.replace(/^data:image\/\w+;base64,/, '');
+            var url = req.protocol + '://' + req.get('host') +  '/picture/user/';
+            console.log(url);
+        fs.writeFile('picture/user/'+formatted+'.jpg', data, {encoding: 'base64'}, function(err){
+        con1.query(sql,[url+formatted+'.jpg',user,md5(password),select,head,name,tel,facebook,email,address,province,amphur,lat,lng],function (err,rows) {
+            if (err) throw err; 
+            res.json({'results':'success_insert','message':'เพิ่มข้อมูลเรียบร้อย'});  
+        });
+        });
+    });
+
+    app.post('/delete_user',function (req,res) {
+            var id = req.body.var_id;
+            var image = req.body.var_image;
+            console.log(id,image);
+            
+            fs.unlink("."+image.substring(21), (err) => {
+            var sql = "DELETE FROM `user` WHERE `user_id` = ?";
+            console.log(sql);
+            con1.query(sql,[id],function (err) {
+                if(err) throw err;
+                res.json({'results':'success_delete','message':'ลบข้อมูลเรียบร้อย'});
+            });
+        });
+    });
+    app.get('/user/:name/:status/:location', function (req, res) {
+        var user,status,location;
+        if(req.params.status==="any"){
+            status = 1;
+        }else{
+            status = "`user_status` = '"+req.params.status+"'";
+        }
+        if(req.params.name=='undefined'){
+            user = 1;
+        }else{
+            user = "`user_name` LIKE '%"+req.params.name+"%'";
+        }
+        if(req.params.location==="All"){
+            location = 1;
+        }else{
+            location = "`user_province` LIKE '%"+req.params.location+"%'";
+        }
+        var sql = "SELECT * FROM `user` WHERE "+status+" AND "+user+" AND "+location+" ORDER BY `user_status` ASC";
+        console.log(sql)
+        con1.query(sql,function (err,rows) {
+            if(err) throw err;    
+            res.json(rows);   
+        });
+    });
+
+    app.get('/autocom/:status',function(req,res){
+        var status;
+        if(req.params.status=='gold'){
+            status = 'vip';
+        }else if(req.params.status=='vip'){
+            status = 'dealer';
+        }else if(req.params.status=='dealer'){
+            status = 'admin';
+        }
+        var sql = "SELECT * FROM `user` where `user_status`='"+status+"'";       
+        var user1=[];
+        con1.query(sql,function (err,rows) {
+            if(err) throw err;
+            for (var i in rows) {
+            var user = {         
+                'name' : rows[i].user_name +" / "+ rows[i].user_username
+            };
+                user1.push(user);
+            }
+            res.json(user1);
+        });
+    });
+
+}
+
+
+// .then(function(response) {
+//         return response.json()
+//       }).then(function(body) {
+//         console.log(body);
+//       });
