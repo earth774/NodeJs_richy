@@ -187,7 +187,7 @@ app.post('/update_order',function(req,res){
         console.log(image);
         console.log(req.get('host'));
         var url = req.protocol + '://' + req.get('host') ; 
-        if((image.substring((req.protocol).length,url.length)==req.get('host'))||(image.substring((req.protocol).length,url.length)=='richlybrownie.')){
+        if((image.substring((req.protocol+ '://').length,url.length)==req.get('host'))||(image.substring((req.protocol).length,url.length)=='richlybrownie.')){
             
             con1.query(sql,[image,name,price,des],function (err,rows) {
                 if (err) throw err; 
