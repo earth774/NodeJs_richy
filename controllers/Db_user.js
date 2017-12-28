@@ -82,7 +82,7 @@ module.exports = function (app,con1) {
     })
 
     app.get('/update/:status/:name',function(req,res){
-        var sql = "SELECT * FROM `user` WHERE `user_name` LIKE '%"+req.params.name+"%' &&`user_status`='"+req.params.status+"'";       
+        var sql = "SELECT * FROM `user` INNER JOIN `status` on user.status_id=status.status_id WHERE `user`.`user_name` LIKE '%"+req.params.name+"%' && `status`.`status_id`='"+req.params.status+"'";       
         let user1=[];
         con1.query(sql,function (err,rows) {
             if(err) throw err;
@@ -338,7 +338,7 @@ module.exports = function (app,con1) {
               'user_lng':rows[0].user_lng,
               'status':rows[0].status_id,
               'head':rows[0].user_head
-                        };
+            };
             console.log([user]);
             res.json([user]);
         });
