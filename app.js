@@ -46,7 +46,7 @@ app.use(function(req, res, next) {
 var con1 = mysql.createConnection({
             host:process.env.PORT,
             user:"root",
-            password:"",
+            password:"root",
             database:"project",
         });;
 
