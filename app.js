@@ -20,7 +20,12 @@ app.set('view engine','ejs'); // npm install ejs --save
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({
+    limit: '50mb',
+    parameterLimit: 100000,
+    extended: false 
+}));
+
 app.use('/picture', express.static(__dirname +'/picture')); 
 
 app.use('/',function (req,res,next) {  // show link to cmd run
