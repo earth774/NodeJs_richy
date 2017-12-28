@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 28, 2017 at 08:24 AM
+-- Generation Time: Dec 28, 2017 at 08:44 AM
 -- Server version: 10.1.26-MariaDB
 -- PHP Version: 7.1.8
 
@@ -129,7 +129,7 @@ CREATE TABLE `user` (
   `user_amphur` varchar(100) NOT NULL,
   `user_lat` varchar(20) NOT NULL,
   `user_lng` varchar(20) NOT NULL,
-  `user_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `user_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
