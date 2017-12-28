@@ -109,6 +109,13 @@ module.exports = function (app,con1) {
             res.json(user1);
         });
     });
+    app.get('/check_user/:user',function(req,res){
+        var sql = "SELECT * FROM `user` WHERE `user_username` LIKE '"+req.params.user+"%' ORDER BY `status_id` ASC";       
+        con1.query(sql,function (err,rows) {
+            if(err) throw err;
+            res.json(rows.length);
+        });
+    });
     app.post('/token',function (req,res) {
         
         var sql = "SELECT * FROM `user` INNER JOIN `status` on user.status_id=status.status_id WHERE user_username=? && user_password=?";

@@ -244,8 +244,8 @@ module.exports = function (app,con1) {
             }else{
                 res.json([{
                     'user_id':'1',         
-                    'user_image' : './assets/error.png',
-                    'user_username': 'error',
+                    'user_image' : 'http://placehold.it/256x256',
+                    'user_username': 'ไม่มีข้อมูล',
                     'user_password':'error',
                     'status_id':'error',
                     'status_type':'error',
