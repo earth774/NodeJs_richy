@@ -19,9 +19,11 @@ app.use('/assets', express.static(__dirname+'/public'));
 app.set('view engine','ejs'); // npm install ejs --save
 
 app.use(cors());
-app.use(bodyParser.json());
+app.use(bodyParser.json({
+    limit: '3mb'
+}));
 app.use(bodyParser.urlencoded({
-    limit: '900KB',
+    limit: '3mb',
     extended: false 
 }));
 
