@@ -170,7 +170,7 @@ module.exports = function (app,con1) {
          
         console.log(image.substring((req.protocol).length,url1.length));
         console.log(req.get('host'));
-        if(image.substring(7,21)==req.get('host')){
+        if(image.substring((req.protocol).length,url1.length)==req.get('host')){
             con1.query(sql,[image,name,tel,facebook,email,lat,lng,address,province,amphur,select,head,user],function (err,rows) {
                 if (err) throw err; 
                 res.json({'results':'success_update','message':'แก่ไขข้อมูลเรียบร้อย'});
