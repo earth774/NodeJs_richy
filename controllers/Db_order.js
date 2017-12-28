@@ -21,7 +21,7 @@ app.get('/list',function (req,res) {
 
 
 app.get('/chart_today',function(req,res){
-    var sql = "SELECT * FROM `order` INNER JOIN `user` on order.user_id = user.user_id where order.order_status=1";
+    var sql = "SELECT * FROM `order` INNER JOIN `user` on order.user_id = user.user_id where order.order_status=1 ";
     con1.query(sql,function(err,rows){
         if(err) throw err;
         
@@ -38,7 +38,7 @@ app.get('/chart_week',function(req,res){
         if(err) throw err;
         var data_week = week(rows);
         res.json([{
-                'status':('dealer'),
+                'status':('dm'),
                 'data_num':data_week
             }]);
     })
@@ -52,7 +52,7 @@ app.get('/chart_Month',function(req,res){
         var data_month = month(rows);
 
         res.json([{
-                'status':('dealer'),
+                'status':('dm'),
                 'data_num':data_month[0],
                 'dateinMonth':data_month[1]
             }]);
@@ -60,7 +60,7 @@ app.get('/chart_Month',function(req,res){
 });
 
 app.get('/top5/:status',function(req,res){
-    var sql = "SELECT order.order_id,user.user_id,SUM(order.order_total) AS order_total,SUM(order.order_num) AS order_num,user.user_image,user.user_username,user.user_status,user.user_name FROM `order` INNER JOIN `user` on order.user_id = user.user_id WHERE user.user_status='"+req.params.status+"' && order.order_status=1 GROUP BY user.user_id LIMIT 5";
+    var sql = "SELECT order.order_id,user.user_id,SUM(order.order_total) AS order_total,SUM(order.order_num) AS order_num,user.user_image,user.user_username,status.status_type,user.user_name FROM `user` INNER JOIN `order` on user.user_id = order.user_id INNER JOIN `status` on user.status_id = status.status_id WHERE status.status_type='"+req.params.status+"' && order.order_status=1 GROUP BY user.user_id LIMIT 5";
     con1.query(sql,function(err,rows){
         var user=[];
         for(let i in rows){
@@ -70,7 +70,7 @@ app.get('/top5/:status',function(req,res){
                 'order_num':abbrNum(rows[i].order_num,2),
                 'user_image':rows[i].user_image,
                 'user_username':rows[i].user_username,
-                'user_status':rows[i].user_status,
+                'status_type':rows[i].status_type,
                 'user_name':rows[i].user_name
             })
         }
@@ -87,7 +87,7 @@ app.get('/chart_year/:name',function(req,res){
         var json = new Array();
         for(let i=0;i<3;i++){
             var user = {
-                'status':((i==0)?'dealer':((i==1)?'vip':'gold')),
+                'status':((i==0)?'dm':((i==1)?'vip':'gold')),
                 'data_num':data[i]
             };
             json.push(user);
@@ -163,8 +163,8 @@ app.post('/add_order',function(req,res){
 app.post('/delete_order',function(req,res){
     var id = req.body.var_id;
     var image = req.body.image;
-
-    fs.unlink("."+image.substring(21), (err) => {
+    var url = req.protocol + '://' + req.get('host') ; 
+    fs.unlink("."+image.substring(url.length), (err) => {
         var sql = "DELETE FROM `order_goods` WHERE `og_id` = ?";
         console.log(sql);
         con1.query(sql,[id],function (err) {
@@ -185,9 +185,9 @@ app.post('/update_order',function(req,res){
     var sql = "UPDATE `order_goods` SET `og_pic`=?,`og_name`=?,`og_price`=?,`og_des`=? WHERE `og_id`="+id;
     if(image!=undefined){
         console.log(image);
-        console.log(image.substring(7,21));
         console.log(req.get('host'));
-        if((image.substring(7,21)==req.get('host'))||(image.substring(7,21)=='richlybrownie.')){
+        var url = req.protocol + '://' + req.get('host') ; 
+        if((image.substring((req.protocol).length,url.length)==req.get('host'))||(image.substring((req.protocol).length,url.length)=='richlybrownie.')){
             
             con1.query(sql,[image,name,price,des],function (err,rows) {
                 if (err) throw err; 
@@ -201,8 +201,9 @@ app.post('/update_order',function(req,res){
                 // console.log(name + tel + facebook + email,image);
                 var data = image.replace(/^data:image\/\w+;base64,/, '');
                 var url = req.protocol + '://' + req.get('host') +  '/picture/product/';
+                var url1 = req.protocol + '://' + req.get('host') ; 
                 console.log(url);
-                fs.unlink("."+line_image.substring(21), (err) => {  // delete file picture for file node js eiei
+                fs.unlink("."+line_image.substring(url1.length), (err) => {  // delete file picture for file node js eiei
                     if (err) throw err;
                     console.log('successfully deleted local image');                                
                 
@@ -244,11 +245,11 @@ function day(f,l,ar,rows){
             // console.log(d1.getHours()+':'+d1.getMinutes()+'.'+d1.getSeconds());
             
             
-            if(rows[ar[j]].user_status=='dealer'){
+            if(rows[ar[j]].status_id=='2'){
                 status[0].push(rows[ar[j]].order_total);
-            }else if(rows[ar[j]].user_status=='vip'){
+            }else if(rows[ar[j]].status_id=='3'){
                 status[1].push(rows[ar[j]].order_total);
-            }else if(rows[ar[j]].user_status=='gold'){
+            }else if(rows[ar[j]].status_id=='4'){
                 status[2].push(rows[ar[j]].order_total);
             }
 
@@ -375,7 +376,7 @@ function r_date(rows){
                 sta[i][j] = status[j][i];
             }
             var user = {
-                'status':((i==0)?'dealer':((i==1)?'vip':'gold')),
+                'status':((i==0)?'dm':((i==1)?'vip':'gold')),
                 'data_num':sta[i]
             };
             json.push(user);
@@ -392,7 +393,7 @@ function week(rows){
         var date = d_nows[0]+'-'+d_nows[1];
 
         if(order_date==date){
-            if(rows[k].user_status=='dealer'){
+            if(rows[k].status_id=='2'){
                 ar.push(k);
             }
         }
@@ -431,7 +432,7 @@ function month(rows){
             var order_date = d.getMonth()+'-'+d.getFullYear();
             var date = d_nows.getMonth()+'-'+d_nows.getFullYear();
             if(order_date==date){
-                if(rows[k].user_status=='dealer'){
+                if(rows[k].status_id=='2'){
                     ar.push(k);
                 }
             }
@@ -571,11 +572,11 @@ function chk_y(i,rows,name){
         if(order_date==date){
             if(i==order_month){
                 if(name=='admin'){
-                    if(rows[k].user_status=='dealer'){
+                    if(rows[k].status_id=='2'){
                         status[0].push(rows[k].order_total);
-                    }else if(rows[k].user_status=='vip'){
+                    }else if(rows[k].status_id=='3'){
                         status[1].push(rows[k].order_total);
-                    }else if(rows[k].user_status=='gold'){
+                    }else if(rows[k].status_id=='4'){
                         status[2].push(rows[k].order_total);
                     }
                 }else{

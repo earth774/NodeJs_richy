@@ -13,7 +13,7 @@ module.exports = function (app,con1) {
         if(req.params.status==="any"){
             status = 1;
         }else{
-            status = "user.user_status = '"+req.params.status+"'";
+            status = "user.status_id = '"+req.params.status+"'";
         }
         if(req.params.name=='undefined'){
             user = 1;
@@ -30,7 +30,7 @@ module.exports = function (app,con1) {
         }else{
             order_status = "`order_status` LIKE '%"+req.params.order_status+"%'";
         }
-        var sql = "SELECT * FROM `order`INNER JOIN user ON order.user_id = user.user_id  WHERE "+status+" AND "+user+' AND '+location+' AND '+order_status+' ORDER BY `order`.`order_date` DESC';
+        var sql = "SELECT * FROM `order`INNER JOIN user ON order.user_id = user.user_id INNER JOIN `status` on user.status_id = status.status_id  WHERE "+status+" AND "+user+' AND '+location+' AND '+order_status+' ORDER BY `order`.`order_date` DESC';
         console.log(sql)
         con1.query(sql,function (err,rows) {
             if(err) throw err;    
@@ -39,16 +39,14 @@ module.exports = function (app,con1) {
     });
 
     app.get('/report_con',function(req,res){
-        var sql = "SELECT * FROM `order`INNER JOIN user ON order.user_id = user.user_id where order.order_status=0 && user.user_status='dealer'";
-
+        var sql = "SELECT * FROM `order`INNER JOIN user ON order.user_id = user.user_id INNER JOIN `status` on user.status_id = status.status_id where order.order_status=0 && user.status_id=2";
         con1.query(sql,function (err,rows) {
             if(err) throw err;
             res.json(rows);
         });
     });
     app.get('/report_con/:province',function(req,res){
-        var sql = "SELECT * FROM `order`INNER JOIN user ON order.user_id = user.user_id where order.order_status=0 && user.user_province='"+req.params.province+"'";
-
+        var sql = "SELECT * FROM `order`INNER JOIN user ON order.user_id = user.user_id INNER JOIN `status` on user.status_id = status.status_id where order.order_status=0 && user.user_province='"+req.params.province+"' && user.status_id!=2";
         con1.query(sql,function (err,rows) {
             if(err) throw err;
             res.json(rows);
@@ -57,7 +55,6 @@ module.exports = function (app,con1) {
 
     app.get('/report_con_detail/:id',function(req,res){
         var sql = "SELECT * FROM `order_description` where order_id="+req.params.id;
-
         con1.query(sql,function (err,rows) {
             if(err) throw err;
             res.json(rows);
@@ -74,7 +71,7 @@ module.exports = function (app,con1) {
         if(status!='vip'){
             if(name=='admin'){
                 sql = "SELECT * FROM `order`INNER JOIN user ON order.user_id = user.user_id ORDER BY `order`.`order_id` DESC";
-            }else if(status=='dealer'){
+            }else if(status=='dm'){
                 sql = "SELECT * FROM `order`INNER JOIN user ON order.user_id = user.user_id WHERE user.user_province='"+province+"' ORDER BY `order`.`order_id` DESC";   
             }
         }else{
@@ -99,7 +96,7 @@ module.exports = function (app,con1) {
 
     app.post('/confirm_order',function(req,res){
         var name = req.body.var_name;
-        var sql = "SELECT * FROM `order`INNER JOIN user ON order.user_id = user.user_id where order.order_status = 0";
+        var sql = "SELECT * FROM `user` INNER JOIN `order` on user.user_id = order.user_id INNER JOIN `status` on user.status_id = status.status_id where order.order_status = 0";
 
         con1.query(sql,function (err,rows) {
             if(err) throw err;
@@ -114,7 +111,7 @@ module.exports = function (app,con1) {
         var sql = "UPDATE `order` SET `order_status`=? WHERE `order_id`=?";
         con1.query(sql,[status,id],function (err) {
             if(err) throw err;
-            res.json({'results':'success_update','message':'แก้ไขข้อมูลเรียบร้อย'});
+            res.json({'results':'success_update','message':'ยืนยันข้อมูลเรียบร้อยแล้ว'});
         });
     });
 

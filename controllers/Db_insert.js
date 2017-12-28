@@ -187,7 +187,7 @@ module.exports = function (app,con1) {
       var status = req.body.var_status;
       console.log(status);
       
-          var sql = "SELECT * FROM `user` where user_head='"+status+"'";
+          var sql = "SELECT * FROM `user` INNER JOIN `status` on user.status_id = status.status_id where user_head='"+status+"'";
           con1.query(sql,function (err,rows) {
               if (err) {
                 console.log(err);
@@ -221,7 +221,8 @@ module.exports = function (app,con1) {
                     'user_image' : rows[i].user_image,
                     'user_username': rows[i].user_username,
                     'user_password':rows[i].user_password,
-                    'user_status':rows[i].user_status,
+                    'status_id':rows[i].status_id,
+                    'status_type':rows[i].status_type,
                     'user_head':rows[i].user_head,
                     'user_name':rows[i].user_name,
                     'user_tel':rows[i].user_tel,
@@ -246,7 +247,8 @@ module.exports = function (app,con1) {
                     'user_image' : './assets/error.png',
                     'user_username': 'error',
                     'user_password':'error',
-                    'user_status':'error',
+                    'status_id':'error',
+                    'status_type':'error',
                     'facebook':'error',
                     'user_head':'error',
                     'user_name':'ไม่มีข้อมูล',
@@ -265,11 +267,11 @@ module.exports = function (app,con1) {
     app.get('/searchreport/:status/:province/:head',function(req,res){
         var sql;
         if(req.params.status=='admin'){
-            sql = "SELECT * FROM  `user`"; 
-        }else if(req.params.status=='dealer'){
-            sql = "SELECT * FROM `user` where user_province='"+req.params.province+"'"; 
+            sql = "SELECT * FROM  `user` INNER JOIN `status` on user.status_id = status.status_id"; 
+        }else if(req.params.status=='dm'){
+            sql = "SELECT * FROM `user` INNER JOIN `status` on user.status_id = status.status_id where user_province='"+req.params.province+"'"; 
         }else if(req.params.status=='vip'){
-            sql = "SELECT * FROM `user` WHERE `user_head`='"+req.params.head+"' && `user_province`='"+req.params.province+"'";
+            sql = "SELECT * FROM `user` INNER JOIN `status` on user.status_id = status.status_id WHERE `user_head`='"+req.params.head+"' && `user_province`='"+req.params.province+"'";
         }        
 
         con1.query(sql,function (err,rows) {
@@ -305,7 +307,8 @@ module.exports = function (app,con1) {
                     'user_image' : rows[i].user_image,
                     'user_username': rows[i].user_username,
                     'user_password':rows[i].user_password,
-                    'user_status':rows[i].user_status,
+                    'status_id':rows[i].status_id,
+                    'status_type':rows[i].status_type,
                     'user_head':rows[i].user_head,
                     'user_name':rows[i].user_name,
                     'user_tel':rows[i].user_tel,
