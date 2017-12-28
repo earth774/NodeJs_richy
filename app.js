@@ -20,10 +20,10 @@ app.set('view engine','ejs'); // npm install ejs --save
 
 app.use(cors());
 app.use(bodyParser.json({
-    limit: '50mb'
+    limit: '300KB'
 }));
 app.use(bodyParser.urlencoded({
-    limit: '50mb',
+    limit: '300KB',
     parameterLimit: 1000000,
     extended: false 
 }));
