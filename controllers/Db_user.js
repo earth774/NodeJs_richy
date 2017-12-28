@@ -113,7 +113,7 @@ module.exports = function (app,con1) {
         var sql = "SELECT * FROM `user` WHERE `user_username` LIKE '"+req.params.user+"%' ORDER BY `status_id` ASC";       
         con1.query(sql,function (err,rows) {
             if(err) throw err;
-            res.json(rows.length);
+            res.json({'username':rows.length});
         });
     });
     app.post('/token',function (req,res) {
