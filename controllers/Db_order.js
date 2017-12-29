@@ -60,7 +60,7 @@ app.get('/chart_Month',function(req,res){
 });
 
 app.get('/top5/:status',function(req,res){
-    var sql = "SELECT order.order_id,user.user_id,SUM(order.order_total) AS order_total,SUM(order.order_num) AS order_num,user.user_image,user.user_username,status.status_type,user.user_name FROM `user` INNER JOIN `order` on user.user_id = order.user_id INNER JOIN `status` on user.status_id = status.status_id WHERE status.status_type='"+req.params.status+"' && order.order_status=1 GROUP BY user.user_id LIMIT 5";
+    var sql = "SELECT order.order_id,user.user_id,SUM(order.order_total) AS order_total,SUM(order.order_num) AS order_num,user.user_image,user.user_username,status.status_type,user.user_name FROM `user` INNER JOIN `order` on user.user_id = order.user_id INNER JOIN `status` on user.status_id = status.status_id WHERE status.status_type='"+req.params.status+"' && order.order_status=1 GROUP BY user.user_id ORDER BY `order`.`order_total` ASC LIMIT 5";
     con1.query(sql,function(err,rows){
         var user=[];
         for(let i in rows){
